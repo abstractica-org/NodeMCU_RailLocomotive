@@ -11,7 +11,8 @@
 class BlockListener
 {
 public:
-    virtual void onBlock(uint8_t blockValue, unsigned long curTime) = 0;
+    virtual void enterBlock(bool direction) = 0;
+    virtual void exitBlock(bool direction, uint8_t blockValue, unsigned long blockTime) = 0;
 };
 
 #endif

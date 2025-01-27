@@ -1,22 +1,17 @@
 #include <Arduino.h>
-#include <Train.h>
 #include <WiFiManager.h>
+#include "Locomotive.h"
 
-#define MOTOR_PWM_PIN 13  //D7 
-#define MOTOR_DIR_PIN_A 15  //D8 Ora
-#define MOTOR_DIR_PIN_B 0 //D3
-#define WIFI_RESET_PIN 4 //D2
-#define FRONT_SENSOR_PIN 4 //D2
-#define BACK_SENSOR_PIN 5 //D1
-#define LEFT_SENSOR_PIN 12 //D6
-#define RIGHT_SENSOR_PIN 14 //D5
+#define WIFI_RESET_PIN D1
 
-Train train(MOTOR_PWM_PIN, MOTOR_DIR_PIN_A, MOTOR_DIR_PIN_B, 20, FRONT_SENSOR_PIN, BACK_SENSOR_PIN, LEFT_SENSOR_PIN, RIGHT_SENSOR_PIN);
+Locomotive locomotive;
 
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  Serial.println();
+  Serial.println("Locomotive");
   pinMode(WIFI_RESET_PIN, INPUT_PULLUP);
   delay(10);
   bool resetWiFi = !digitalRead(WIFI_RESET_PIN);
@@ -45,10 +40,11 @@ void setup()
   //if you get here you have connected to the WiFi
   Serial.println("WiFi is connected!");
 
-  train.begin(3377, 3377);
+  locomotive.begin(3377, 3377);
 }
 
 void loop()
 {
-  train.update(millis());
+  unsigned long curTime = millis();
+  locomotive.update(curTime);
 }

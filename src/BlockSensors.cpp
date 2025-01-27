@@ -10,12 +10,17 @@ uint8_t BlockSensors::_backSensorPin;
 uint8_t BlockSensors::_leftSensorPin;
 uint8_t BlockSensors::_rightSensorPin;
 BlockListener* BlockSensors::_pListener;
-volatile uint8_t BlockSensors::_curDirection;
-volatile bool BlockSensors::_onBlock;
-volatile bool BlockSensors::_leftBlock;
-volatile bool BlockSensors::_rightBlock;
-volatile uint8_t BlockSensors::_blockCount;
-uint8_t BlockSensors::_lastBlockCount;
+
+volatile bool BlockSensors::_frontActivated;
+volatile bool BlockSensors::_backActivated;
+volatile bool BlockSensors::_leftActivated;
+volatile bool BlockSensors::_rightActivated;
+
+bool BlockSensors::_forward;
+
+//Keeping track of blocks
+bool BlockSensors::_onBlock;
+unsigned long BlockSensors::_enterBlockTime;
 
 void BlockSensors::begin
 (
@@ -31,10 +36,8 @@ void BlockSensors::begin
     _leftSensorPin = leftSensorPin;
     _rightSensorPin = rightSensorPin;
     _pListener = pListener;
-    _curDirection = 0;
+    _forward = true;
     _onBlock = false;
-    _blockCount = 0;
-    _lastBlockCount = 0;
 
     pinMode(_frontSensorPin, INPUT_PULLUP);
     pinMode(_backSensorPin, INPUT_PULLUP);
@@ -48,82 +51,102 @@ void BlockSensors::begin
 
 void BlockSensors::update(unsigned long curTime)
 {
-    if(_blockCount != _lastBlockCount)
+    if(_forward)
     {
-        _lastBlockCount = _blockCount;
-        uint8_t blockValue = 0;
-        if(_leftBlock)
+        if(_frontActivated)
         {
-            _leftBlock = false;
-            blockValue += 1;
-        } 
-        if(_rightBlock)
-        {
-            _rightBlock = false;
-            blockValue += 2;
+            _frontActivated = false;
+            if(!_onBlock)
+            {
+                _enterBlockTime = curTime;
+                _onBlock = true;
+                _leftActivated = false;
+                _rightActivated = false;
+                _pListener->enterBlock(_forward);
+            }
         }
-        _pListener->onBlock(blockValue, curTime);
-    }
-}
-
-void BlockSensors::setDirection(uint8_t dir)
-{
-    if(dir == _curDirection) return;
-    if(_onBlock)
-    {
-        _onBlock = false;
-        _leftBlock = false;
-        _rightBlock = false;
+        if(_backActivated)
+        {
+            _backActivated = false;
+            if(_onBlock)
+            {
+                unsigned long blockTime = curTime - _enterBlockTime;
+                _onBlock = false;
+                uint8_t blockValue = 0;
+                if(_leftActivated)
+                {
+                    blockValue += 1;
+                }
+                if(_rightActivated)
+                {
+                    blockValue += 2;
+                }
+                _leftActivated = false;
+                _rightActivated = false;
+                _pListener->exitBlock(_forward, blockValue, blockTime);
+            }
+        }
     }
     else
     {
-        uint8_t pin = _curDirection == 0 ? _backSensorPin : _frontSensorPin;
-        if(digitalRead(pin))
+        if(_backActivated)
         {
-            _onBlock = true;
-            _leftBlock = false;
-            _rightBlock = false;
+            _backActivated = false;
+            if(!_onBlock)
+            {
+                _enterBlockTime = curTime;
+                _onBlock = true;
+                _leftActivated = false;
+                _rightActivated = false;
+                _pListener->enterBlock(_forward);
+            }
+        }
+        if(_frontActivated)
+        {
+            _frontActivated = false;
+            if(_onBlock)
+            {
+                unsigned long blockTime = curTime - _enterBlockTime;
+                _onBlock = false;
+                uint8_t blockValue = 0;
+                if(_leftActivated)
+                {
+                    blockValue += 1;
+                }
+                if(_rightActivated)
+                {
+                    blockValue += 2;
+                }
+                _leftActivated = false;
+                _rightActivated = false;
+                _pListener->exitBlock(_forward, blockValue, blockTime);
+            }
         }
     }
+}
+
+void BlockSensors::setDirection(bool forward)
+{
+    _forward = forward;
 }
 
 //block sensors interrupt callbacks
 void IRAM_ATTR BlockSensors::_onFrontSensor()
 {
-    if (_curDirection == 0 && !_onBlock)
-    {
-        _onBlock = true;
-         _leftBlock = false;
-        _rightBlock = false;
-    }
-    else if (_curDirection == 1 && _onBlock)
-    {
-        _onBlock = false;
-        ++_blockCount;
-    }
+    _frontActivated = true;
 }
 
 void IRAM_ATTR BlockSensors::_onBackSensor()
 {
-    if (_curDirection == 1 && !_onBlock)
-    {
-        _onBlock = true;
-        _leftBlock = false;
-        _rightBlock = false;
-    }
-    else if (_curDirection == 0 && _onBlock)
-    {
-        _onBlock = false;
-        ++_blockCount;
-    }
+    _backActivated = true;
 }
 
 void IRAM_ATTR BlockSensors::_onLeftSensor()
 {
-    _leftBlock = true;
+   _leftActivated = true;
 }
 
 void IRAM_ATTR BlockSensors::_onRightSensor()
 {
-    _rightBlock = true;
+    _rightActivated = true;
 }

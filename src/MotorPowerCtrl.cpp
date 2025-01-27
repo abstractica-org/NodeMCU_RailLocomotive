@@ -1,12 +1,12 @@
 #include <Arduino.h>
-#include "MotorCtrl.h"
+#include "MotorPowerCtrl.h"
 
-MotorCtrl::MotorCtrl(uint8_t pwmPin, uint8_t dirPinA, uint8_t dirPinB, unsigned long msPrPowerChange)
+MotorPowerCtrl::MotorPowerCtrl(uint8_t pwmPin, uint8_t dirPinA, uint8_t dirPinB)
 {
     _pwmPin = pwmPin;
     _dirPinA = dirPinA;
     _dirPinB = dirPinB;
-    _msPrPowerChange = msPrPowerChange;
+    _msPrPowerChange = 10;
     _lastPowerChange = 0;
     _dir = 0;
     pinMode(_pwmPin, OUTPUT);
@@ -17,7 +17,7 @@ MotorCtrl::MotorCtrl(uint8_t pwmPin, uint8_t dirPinA, uint8_t dirPinB, unsigned 
     digitalWrite(_dirPinB, HIGH);
 }
 
-void MotorCtrl::update(unsigned long curTime)
+void MotorPowerCtrl::update(unsigned long curTime)
 {
     if(_targetPower != _actualPower && curTime >= _lastPowerChange + _msPrPowerChange)
     {
@@ -34,48 +34,38 @@ void MotorCtrl::update(unsigned long curTime)
     }
 }
 
-void MotorCtrl::setTargetPower(uint8_t targetPower)
+void MotorPowerCtrl::setTargetPower(uint8_t targetPower, unsigned int msPrPowerChange)
 {
     _targetPower = targetPower;
+    _msPrPowerChange = msPrPowerChange;
 }
 
-void MotorCtrl::stop()
+void MotorPowerCtrl::stop()
 {
     _targetPower = 0;
     _actualPower = 0;
     analogWrite(_pwmPin, 0);
 }
 
-void MotorCtrl::setDirection(uint8_t dir)   // 0 = Forward, 1 = Backward
+void MotorPowerCtrl::setDirection(bool dir)   // true = Forward, false = Backward
 {
     if(_dir == dir || _actualPower != 0) return;
-    if(dir == 0)
-    {
-        Serial.println("Setting motor dir = 0");
-        digitalWrite(_dirPinA, LOW);
-        digitalWrite(_dirPinB, HIGH);
-        _dir = 0;       
-    }
-    else if(dir == 1)
-    {
-        Serial.println("Setting motor dir = 1");
-        digitalWrite(_dirPinA, HIGH);
-        digitalWrite(_dirPinB, LOW);
-        _dir = 1;
-    }
+    _dir = dir;
+    digitalWrite(_dirPinA, dir);
+    digitalWrite(_dirPinB, !dir);
 }
 
-uint8_t MotorCtrl::getDirection()
+bool MotorPowerCtrl::getDirection()
 {
     return _dir;
 }
 
-uint8_t MotorCtrl::getActualPower()
+uint8_t MotorPowerCtrl::getActualPower()
 {
     return _actualPower;
 }
 
-uint8_t MotorCtrl::getTargetPower()
+uint8_t MotorPowerCtrl::getTargetPower()
 {
     return _targetPower;
 }

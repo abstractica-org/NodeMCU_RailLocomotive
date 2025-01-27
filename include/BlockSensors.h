@@ -21,9 +21,9 @@ public:
         BlockListener* pListener
     );
     static void update(unsigned long curTime);
-    static void setDirection(uint8_t dir);
+    static void setDirection(bool forward);
 private:
-    //Hallsensor interrupt callbacks
+    //Sensor callbacks
     static void IRAM_ATTR _onFrontSensor();
     static void IRAM_ATTR _onBackSensor();
     static void IRAM_ATTR _onLeftSensor();
@@ -34,17 +34,17 @@ private:
     static uint8_t _leftSensorPin;
     static uint8_t _rightSensorPin;
 
+    static volatile bool _frontActivated;
+    static volatile bool _backActivated;
+    static volatile bool _leftActivated;
+    static volatile bool _rightActivated;
+
     static BlockListener* _pListener;
 
-    static volatile uint8_t _curDirection;
+    static bool _forward;
 
     //Keeping track of blocks
-    static volatile bool _onBlock;
-    static volatile bool _leftBlock;
-    static volatile bool _rightBlock;
-    static volatile uint8_t _blockCount;
-    static uint8_t _lastBlockCount;
+    static bool _onBlock;
+    static unsigned long _enterBlockTime;
 };
-
-
 #endif

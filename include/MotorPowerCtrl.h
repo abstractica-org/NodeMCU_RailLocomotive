@@ -2,20 +2,20 @@
   Author: Tobias Grundtvig
 */
 
-#ifndef MotorCtrl_h
-#define MotorCtrl_h
+#ifndef MotorPowerCtrl_h
+#define MotorPowerCtrl_h
 
 #include <Arduino.h>
 
-class MotorCtrl
+class MotorPowerCtrl
 {
 public:
-    MotorCtrl(uint8_t pwmPin, uint8_t dirPinA, uint8_t dirPinB, unsigned long msPrPowerChange);
+    MotorPowerCtrl(uint8_t pwmPin, uint8_t dirPinA, uint8_t dirPinB);
     void update(unsigned long curTime);
-    void setTargetPower(uint8_t targetPower);
+    void setTargetPower(uint8_t targetPower, unsigned int msPrPowerChange);
     void stop();
-    void setDirection(uint8_t dir); // 0 = Forward, 1 = Backward
-    uint8_t getDirection();
+    void setDirection(bool forward); // true = Forward, false = Backward
+    bool getDirection();
     uint8_t getActualPower();
     uint8_t getTargetPower();
 private:
