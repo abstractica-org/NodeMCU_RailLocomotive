@@ -48,7 +48,7 @@ void LocomotiveCtrl::update(unsigned long curTime)
     }
     else if(_state == LOCOMOTIVE_CTRL_STATE_STOPPING_WAIT && _curTime > _stoppedTime + 1000)
     {
-        _state == LOCOMOTIVE_CTRL_STATE_STOPPED;
+        _state = LOCOMOTIVE_CTRL_STATE_STOPPED;
         _pListener->onStopped();
     }
 }
@@ -109,7 +109,7 @@ void LocomotiveCtrl::exitBlock(bool direction, uint8_t blockValue, unsigned long
     {
         _powerCtrl.setTargetPower(getTargetPower(), 10);
     }
-    _pListener->onExitBlock(blockValue, _distanceToGoal);
+    _pListener->onExitBlock(blockValue, _distanceToGoal, blockTime, _powerCtrl.getActualPower());
 }
 
 uint8_t LocomotiveCtrl::getTargetPower()
