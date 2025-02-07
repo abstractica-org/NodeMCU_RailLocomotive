@@ -128,6 +128,7 @@ void BlockSensors::update(unsigned long curTime)
 void BlockSensors::setDirection(bool forward)
 {
     _forward = forward;
+    _onBlock = false;
 }
 
 //block sensors interrupt callbacks

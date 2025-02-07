@@ -8,6 +8,8 @@ Locomotive locomotive;
 
 void setup()
 {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial.println();
@@ -39,7 +41,7 @@ void setup()
   wifiManager.autoConnect(apName.c_str());
   //if you get here you have connected to the WiFi
   Serial.println("WiFi is connected!");
-
+  digitalWrite(LED_BUILTIN, HIGH);
   locomotive.begin(3377, 3377);
 }
 

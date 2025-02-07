@@ -16,7 +16,7 @@ LocomotiveCtrl::LocomotiveCtrl(LocomotiveCtrlListener* pListener) : _powerCtrl(M
     _pListener = pListener;
     _state = LOCOMOTIVE_CTRL_STATE_STOPPED;
     _distanceToGoal = 0;
-    _powerAdjust = 40;
+    _powerAdjust = 60;
     _lastActionTime = 0;
     _stoppedTime = 0;
 }
@@ -37,7 +37,7 @@ void LocomotiveCtrl::update(unsigned long curTime)
         _powerCtrl.getTargetPower() < LOCOMOTIVE_CTRL_START_POWER)
     {
         uint8_t curPower = _powerCtrl.getTargetPower();
-        _powerCtrl.setTargetPower(curPower+1, 1);
+        _powerCtrl.setTargetPower(curPower+8, 1);
         _lastActionTime = _curTime;
     }
     //Handle stopping
@@ -102,7 +102,8 @@ void LocomotiveCtrl::exitBlock(bool direction, uint8_t blockValue, unsigned long
             --_powerAdjust;
         }
         //Stop the locomotive
-        _powerCtrl.setTargetPower(0, 2);
+        _powerCtrl.stop();
+        //_powerCtrl.setTargetPower(0, 1);
         _state = LOCOMOTIVE_CTRL_STATE_STOPPING_POWERDOWN;
     }
     else
@@ -115,7 +116,11 @@ void LocomotiveCtrl::exitBlock(bool direction, uint8_t blockValue, unsigned long
 uint8_t LocomotiveCtrl::getTargetPower()
 {
     if(_distanceToGoal > 25) return 255;
-    uint16_t power = _distanceToGoal * 10 + _powerAdjust;
-    if(power > 255) return 255;
-    return (uint8_t) power;
+    if(_distanceToGoal > 3)
+    {
+        uint16_t power = _distanceToGoal * 10 + _powerAdjust;
+        if(power > 255) return 255;
+        return (uint8_t) power;
+    }
+    return _powerAdjust;
 }
