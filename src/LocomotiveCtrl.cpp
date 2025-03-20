@@ -89,7 +89,7 @@ void LocomotiveCtrl::enterBlock(bool direction)
 void LocomotiveCtrl::exitBlock(bool direction, uint8_t blockValue, unsigned long blockTime)
 {
     _lastActionTime = _curTime;
-    --_distanceToGoal;
+    if(_distanceToGoal > 0) --_distanceToGoal;
     if(_distanceToGoal == 0)
     {
         //Adjust the final speed before a stop
