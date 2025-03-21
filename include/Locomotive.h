@@ -10,6 +10,8 @@
 #define CMD_IDENTIFY 1000
 #define CMD_MOVE 1001
 #define CMD_DIRECTION 1002
+#define CMD_CTRL_MODE 1003
+#define CMD_SET_POWER 1004
 
 //Train to server commands
 #define CMD_ON_EXIT_BLOCK 2000

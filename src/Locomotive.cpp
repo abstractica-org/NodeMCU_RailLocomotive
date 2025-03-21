@@ -54,6 +54,14 @@ uint16_t Locomotive::onPacketReceived(uint16_t command, uint16_t arg1, uint16_t 
             if(arg1 != 0 && arg1 != 1) return 2;
             _locomotiveCtrl.setDirection(arg1 == 0);
             return 0;
+        case CMD_CTRL_MODE:
+            if(arg1 != 0 && arg1 != 1) return 2;
+            if(!_locomotiveCtrl.setCtrlMode(arg1 == 0)) return 1;
+            return 0;
+        case CMD_SET_POWER:
+            if(arg1 > 255) return 2;
+            if(!_locomotiveCtrl.setPower(arg1)) return 1;
+            return 0;
         default:
             return 101; 
     }

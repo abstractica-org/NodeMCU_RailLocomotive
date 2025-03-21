@@ -19,7 +19,9 @@ class LocomotiveCtrl : BlockListener
 public:
     LocomotiveCtrl(LocomotiveCtrlListener* pListener);
     void update(unsigned long curTime);
-    void setDirection(bool forward);
+    bool setCtrlMode(bool manual);
+    bool setDirection(bool forward);
+    bool setPower(uint16_t power);
     void move(uint16_t distance);
     bool isStopped();
     void enterBlock(bool direction);
@@ -34,6 +36,7 @@ private:
     uint8_t _state;
     uint16_t _distanceToGoal;
     uint8_t _powerAdjust;
+    bool _manualControl;
 };
 
 #endif

@@ -19,6 +19,7 @@ LocomotiveCtrl::LocomotiveCtrl(LocomotiveCtrlListener* pListener) : _powerCtrl(M
     _powerAdjust = 60;
     _lastActionTime = 0;
     _stoppedTime = 0;
+    _manualControl = false;
 }
 
 void LocomotiveCtrl::update(unsigned long curTime)
@@ -31,13 +32,15 @@ void LocomotiveCtrl::update(unsigned long curTime)
     _powerCtrl.update(curTime);
 
     //Adjust power if we might have come to a halt 
-    if( _state == LOCOMOTIVE_CTRL_STATE_RUNNING &&
+    
+    if( !_manualControl &&
+        _state == LOCOMOTIVE_CTRL_STATE_RUNNING &&
         _curTime > _lastActionTime + LOCOMOTIVE_CTRL_MAXIMUM_BLOCK_TIME &&
         _powerCtrl.getActualPower() == _powerCtrl.getTargetPower() &&
-        _powerCtrl.getTargetPower() < LOCOMOTIVE_CTRL_START_POWER)
+        _powerCtrl.getTargetPower() < LOCOMOTIVE_CTRL_START_POWER+100)
     {
         uint8_t curPower = _powerCtrl.getTargetPower();
-        _powerCtrl.setTargetPower(curPower+8, 1);
+        _powerCtrl.setTargetPower(curPower+8, 10);
         _lastActionTime = _curTime;
     }
     //Handle stopping
@@ -53,17 +56,51 @@ void LocomotiveCtrl::update(unsigned long curTime)
     }
 }
 
-void LocomotiveCtrl::setDirection(bool forward)
+bool LocomotiveCtrl::setCtrlMode(bool manual)
 {
-    if(_state == LOCOMOTIVE_CTRL_STATE_STOPPED)
+    if(_state != LOCOMOTIVE_CTRL_STATE_STOPPED)
     {
-        BlockSensors::setDirection(forward);
-        _powerCtrl.setDirection(forward);
+        return false;
     }
+    _manualControl = manual;
+    return true;
+}
+
+bool LocomotiveCtrl::setDirection(bool forward)
+{
+    if(_state != LOCOMOTIVE_CTRL_STATE_STOPPED)
+    {
+        return false;
+    }
+    BlockSensors::setDirection(forward);
+    _powerCtrl.setDirection(forward);
+    return true;
+}
+
+bool LocomotiveCtrl::setPower(uint16_t power)
+{
+    if(!_manualControl)
+    {
+        return false;
+    }
+    _powerCtrl.setTargetPower(power, 5);
+    if(power != 0)
+    {
+        _state = LOCOMOTIVE_CTRL_STATE_RUNNING;
+    }
+    else if(_state == LOCOMOTIVE_CTRL_STATE_RUNNING)
+    {
+        _state = LOCOMOTIVE_CTRL_STATE_STOPPING_POWERDOWN;
+    }
+    return true;
 }
 
 void LocomotiveCtrl::move(uint16_t distance)
 {
+    if(_manualControl)
+    {
+        return;
+    }
     _distanceToGoal += distance;
     if(_state == LOCOMOTIVE_CTRL_STATE_RUNNING)
     {
@@ -88,6 +125,11 @@ void LocomotiveCtrl::enterBlock(bool direction)
 
 void LocomotiveCtrl::exitBlock(bool direction, uint8_t blockValue, unsigned long blockTime)
 {
+    if(_manualControl)
+    {
+        _pListener->onExitBlock(blockValue, 1, blockTime, _powerCtrl.getActualPower());
+        return;
+    }
     _lastActionTime = _curTime;
     if(_distanceToGoal > 0) --_distanceToGoal;
     if(_distanceToGoal == 0)
