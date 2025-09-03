@@ -35,7 +35,29 @@ void setup()
   //reset saved settings
   if(resetWiFi)
   {
+    
+    WiFi.mode(WIFI_STA);
+    // Ensure writes go to flash
+    WiFi.persistent(true);
+    // Disconnect AND tell SDK to forget creds
+    WiFi.disconnect(true);
+    delay(500);
+
+    // Belt-and-suspenders: nuke SDK config in flash
+    ESP.eraseConfig();
+    delay(500);
+
     wifiManager.resetSettings();
+
+    for(int i  = 0; i < 10; ++i)
+    {
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(100);
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(200);
+    }
+    // Start fresh
+    ESP.restart();
   }
   
   wifiManager.autoConnect(apName.c_str());
